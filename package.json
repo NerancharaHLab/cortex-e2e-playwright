@@ -1,0 +1,27 @@
+{
+  "name": "cortex-e2e-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:tmh": "playwright test --config=playwright-tmh.config.ts",
+    "test:nuh": "playwright test --config=playwright-nuh.config.ts",
+    "test:tmh:ui": "playwright test --config=playwright-tmh.config.ts --ui",
+    "test:nuh:ui": "playwright test --config=playwright-nuh.config.ts --ui",
+    "test:tmh:debug": "playwright test --config=playwright-tmh.config.ts --debug",
+    "test:nuh:debug": "playwright test --config=playwright-nuh.config.ts --debug",
+    "test:debug": "playwright test --debug",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:unit": "playwright test tests/unit/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1"
+  }
+}
