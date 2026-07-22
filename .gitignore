@@ -8,3 +8,5 @@ node_modules/
 .env.*.local
 .DS_Store
 *.log
+cortex_automation_standards*
+/test_data/
