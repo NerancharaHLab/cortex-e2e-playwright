@@ -6,6 +6,7 @@ const {
   calculateDOBBEFromAge,
   generateRandomPatient,
 } = require('../../../utils/patientGenerator.js');
+const { saveCreatedPatient } = require('../../../utils/patientStorage.js');
 
 test.describe('NUH Reception Site - Patient Registration Module', () => {
 
@@ -99,7 +100,7 @@ test.describe('NUH Reception Site - Patient Registration Module', () => {
     await createPatientPage.assertDOBMatchesCalculated(targetAge);
   });
 
-  // TC07: Register new patient using randomized patient data (Age 20-80), capture HN, search by HN, and verify profile
+  // TC07: Register new patient using randomized patient data (Age 20-80), capture HN, search by HN, and save to created_patients.json
   test('TC07: Complete registration with randomly generated patient (Age 20-80), capture HN, and search by HN @NUH @Module @Registration @HappyPath @DataDriven @Search @Regression', async ({ authenticatedPage }) => {
     const createPatientPage = new CreatePatientPage(authenticatedPage);
     await createPatientPage.openCreatePatientForm();
@@ -121,15 +122,32 @@ test.describe('NUH Reception Site - Patient Registration Module', () => {
     await createPatientPage.submitForm();
     await createPatientPage.assertPatientCreated();
 
-    // Capture generated HN / Patient ID
+    // Assert patient profile details (First Name, Last Name, Citizen ID) on patient info page
+    await createPatientPage.assertPatientProfileDetails(randomPatient);
+
+    // Capture generated HN / Patient ID (e.g. "69007582")
     const patientHN = await createPatientPage.getCreatedPatientHN();
     expect(patientHN).toBeTruthy();
+    expect(patientHN.toUpperCase()).not.toBe('CORTEX');
+
+    // Automatically append created patient record to created_patients.json without overwriting
+    saveCreatedPatient({
+      hn: patientHN,
+      idCardNumber: randomPatient.idCardNumber,
+      prefixOptionText: randomPatient.prefixOptionText,
+      firstName: randomPatient.firstName,
+      familyName: randomPatient.familyName,
+      gender: randomPatient.gender,
+      birthDateBE: randomPatient.birthDateBE,
+      age: Number(age),
+    }, 'nuh');
 
     // Perform patient search by captured HN
     await createPatientPage.searchPatientByHN(patientHN);
 
     // Assert search result opens the patient profile page matching HN
     await createPatientPage.assertPatientSearchResult(patientHN);
+    await createPatientPage.assertPatientProfileDetails(randomPatient);
   });
 
 });
