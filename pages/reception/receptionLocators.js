@@ -14,8 +14,11 @@ export const receptionLocators = {
     optionItem: 'div[role="option"], ul.search-results > li',
   },
   patientProfile: {
-    hnText: '[data-testid="patient-hn"], [data-testid="hn"], span:has-text("HN"), h2, h3',
-    nameHeader: '[data-testid="patient-name-header"]',
+    hnSpan: 'span[class*="_patient-profile-hn_"]',
+    hnText: 'span[class*="_patient-profile-hn_"] b, span[class*="_patient-profile-hn_"]',
+    nameHeader: 'span[class*="_patient-profile-hn_"] ~ span, div:has-text("ข้อมูลผู้ป่วย")',
+    citizenIdLabel: 'text=รหัสประจำตัวประชาชน',
+    fullNameLabel: 'text=ชื่อ-นามสกุล',
   },
   button: {
     submit: '[data-testid="submit-button"]',

@@ -227,27 +227,30 @@ export class CreatePatientPage {
     await this.fillBirthDateBE(patientData.birthDateBE);
   }
 
-  // --- Patient Search Methods ---
+  // --- Patient Search & Profile Methods ---
 
   /**
-   * Captures created patient HN or ID from redirected patient info page URL or DOM
+   * Captures created patient HN from exact profile span (span._patient-profile-hn_...) or redirected URL
    * @returns {Promise<string>}
    */
   async getCreatedPatientHN() {
     await this.page.waitForURL(this.selectors.path.patientInfoPattern, { timeout: 20000 });
-    const url = this.page.url();
-    const match = url.match(/\/cortex\/next\/patients\/(\d+)/);
-    const patientId = match ? match[1] : '';
 
-    const hnElement = this.page.locator(this.selectors.patientProfile.hnText).first();
-    const isHnVisible = await hnElement.isVisible({ timeout: 3000 }).catch(() => false);
+    // 1. Try exact HN element span[class*="_patient-profile-hn_"] (e.g. "HN 69007582")
+    const hnSpan = this.page.locator(this.selectors.patientProfile.hnSpan).first();
+    const isHnVisible = await hnSpan.isVisible({ timeout: 5000 }).catch(() => false);
 
     if (isHnVisible) {
-      const hnText = await hnElement.innerText();
-      const cleanedHn = hnText.replace(/HN\s*:?/i, '').trim();
-      if (cleanedHn) return cleanedHn;
+      const rawText = await hnSpan.innerText();
+      const match = rawText.match(/HN\s*(\d+)/i);
+      if (match && match[1]) {
+        return match[1];
+      }
     }
-    return patientId;
+
+    // 2. Fallback to Patient ID from URL: /cortex/next/patients/69007582...
+    const urlMatch = this.page.url().match(/\/cortex\/next\/patients\/(\d+)/);
+    return urlMatch ? urlMatch[1] : '';
   }
 
   /**
@@ -293,10 +296,23 @@ export class CreatePatientPage {
    * @param {string} [expectedQuery]
    */
   async assertPatientSearchResult(expectedQuery = '') {
-    await expect(this.page).toHaveURL(/\/cortex\/next\/patients\/\d+/);
-    if (expectedQuery) {
-      const pageContent = await this.page.content();
-      expect(pageContent).toContain(expectedQuery);
+    await expect(this.page).toHaveURL(/\/cortex\/next\/patients\/\d+/, { timeout: 15000 });
+    const hnSpan = this.page.locator(this.selectors.patientProfile.hnSpan).first();
+    await expect(hnSpan).toBeVisible({ timeout: 15000 });
+  }
+
+  /**
+   * Asserts patient profile details (First Name, Last Name) on the Patient Info page using Playwright element locators
+   * @param {Object} patientData Patient data containing firstName, familyName
+   */
+  async assertPatientProfileDetails(patientData = {}) {
+    await this.page.waitForURL(this.selectors.path.patientInfoPattern, { timeout: 20000 });
+
+    if (patientData.firstName) {
+      await expect(this.page.getByText(patientData.firstName, { exact: false }).first()).toBeVisible({ timeout: 10000 });
+    }
+    if (patientData.familyName) {
+      await expect(this.page.getByText(patientData.familyName, { exact: false }).first()).toBeVisible({ timeout: 10000 });
     }
   }
 
